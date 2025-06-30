@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="treeland_pickcolor_unstable_v1">
+
+  <copyright><![CDATA[
+    SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+    SPDX-License-Identifier: MIT
+    ]]></copyright>
+
+  <interface name="treeland_pickcolor_manager_v1" version="1">
+    <description summary="color picker manager">
+      This global is a factory interface for creating color picker
+      objects. Clients can use it to initiate color picking operations.
+      
+      This interface provides the capability to create color picker objects
+      that can sample colors from the screen with high precision, including
+      color space information.
+    </description>
+
+    <enum name="error">
+      <description summary="manager errors">
+        These errors can be emitted in response to requests.
+      </description>
+      <entry name="invalid_input" value="0" summary="invalid input parameters"/>
+      <entry name="unsupported" value="1" summary="operation not supported"/>
+    </enum>
+
+    <request name="get_pickcolor">
+      <description summary="create a color picker">
+        Create a new color picker object. The compositor may start capturing
+        input or displaying relevant UI when the picker is activated.
+        
+        The picker will be created in an inactive state and must be explicitly
+        activated using the activate request.
+      </description>
+      <arg name="id" type="new_id" interface="treeland_pickcolor_v1"/>
+    </request>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the manager">
+        Destroy the color picker manager. All associated picker objects
+        remain valid but no new pickers can be created.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="treeland_pickcolor_v1" version="1">
+    <description summary="color picker object">
+      A color picker object allows the client to receive color values selected
+      from the screen. When active, the compositor may listen for user input,
+      such as mouse clicks, and respond by sending the corresponding color.
+      
+      The picker operates in different states and can provide detailed color
+      information including color space data and pixel coordinates.
+    </description>
+
+    <enum name="error">
+      <description summary="picker errors">
+        These errors can be emitted in response to requests.
+      </description>
+      <entry name="invalid_state" value="0" summary="operation not valid in current state"/>
+      <entry name="invalid_coordinates" value="1" summary="coordinates out of bounds"/>
+      <entry name="compositor_error" value="2" summary="compositor-side error"/>
+    </enum>
+
+    <enum name="state">
+      <description summary="picker state">
+        Describes the current state of the color picker.
+      </description>
+      <entry name="inactive" value="0" summary="picker is not active"/>
+      <entry name="active" value="1" summary="picker is active and waiting for input"/>
+      <entry name="paused" value="2" summary="picker is temporarily paused"/>
+    </enum>
+
+    <enum name="colorspace">
+      <description summary="color space types">
+        Supported color spaces for color data.
+      </description>
+      <entry name="srgb" value="0" summary="sRGB color space"/>
+      <entry name="display_p3" value="1" summary="Display P3 color space"/>
+      <entry name="rec2020" value="2" summary="Rec. 2020 color space"/>
+      <entry name="adobe_rgb" value="3" summary="Adobe RGB color space"/>
+      <entry name="bt709" value="4" summary="BT.709 color space"/>
+      <entry name="unknown" value="5" summary="unknown or custom color space"/>
+    </enum>
+
+    <event name="state_changed">
+      <description summary="picker state changed">
+        Sent when the picker state changes. Clients should update their
+        UI or behavior accordingly.
+      </description>
+      <arg name="state" type="uint" enum="state" summary="new state"/>
+    </event>
+
+    <event name="color">
+      <description summary="a color was picked">
+        Sent when the user picks a color. Typically triggered when the user
+        clicks on a point on the screen while the picker is active.
+
+        Each channel is represented as a 32-bit unsigned integer in the range
+        0 to 4294967295 (inclusive), allowing for high-precision color data.
+        The values are unpremultiplied.
+        
+        The coordinates indicate the exact pixel location where the color
+        was sampled, in surface-local coordinates of the output.
+      </description>
+      <arg name="x" type="int" summary="x coordinate of picked pixel"/>
+      <arg name="y" type="int" summary="y coordinate of picked pixel"/>
+      <arg name="a" type="uint" summary="alpha channel (0–4294967295)"/>
+      <arg name="r" type="uint" summary="red channel (0–4294967295)"/>
+      <arg name="g" type="uint" summary="green channel (0–4294967295)"/>
+      <arg name="b" type="uint" summary="blue channel (0–4294967295)"/>
+      <arg name="colorspace" type="uint" enum="colorspace" summary="color space of the sampled color"/>
+    </event>
+
+    <event name="error">
+      <description summary="picker error occurred">
+        Sent when an error occurs during color picking operation.
+        The picker may become inactive as a result.
+      </description>
+      <arg name="error_code" type="uint" enum="error" summary="error type"/>
+      <arg name="message" type="string" summary="human-readable error description"/>
+    </event>
+
+    <request name="activate">
+      <description summary="activate the color picker">
+        Activate the color picker to start capturing user input.
+        The compositor should show appropriate UI and start monitoring
+        for user interactions.
+      </description>
+    </request>
+
+    <request name="pick_at">
+      <description summary="pick color at specific coordinates">
+        Request to pick a color at specific coordinates without waiting
+        for user input. The coordinates are in global compositor space.
+        
+        This is useful for programmatic color sampling.
+      </description>
+      <arg name="x" type="int" summary="x coordinate to sample"/>
+      <arg name="y" type="int" summary="y coordinate to sample"/>
+    </request>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the picker object">
+        Destroy the color picker. The compositor may stop listening for input
+        or hide related UI as a result.
+      </description>
+    </request>
+
+    <request name="pause">
+      <description summary="pause the picker temporarily">
+        Temporarily pause the color picking operation. The compositor may
+        suspend input monitoring or hide UI, but should preserve the picker state.
+        
+        The picker state will change to paused.
+      </description>
+    </request>
+
+    <request name="resume">
+      <description summary="resume a paused picker">
+        Resume a previously paused picker operation. The compositor should
+        resume input handling and restore any relevant UI.
+        
+        The picker state will change back to active.
+      </description>
+    </request>
+  </interface>
+</protocol>
