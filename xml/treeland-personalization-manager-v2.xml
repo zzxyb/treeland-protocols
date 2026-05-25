@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="treeland_personalization_manager_v2">
+    <copyright><![CDATA[
+    SPDX-FileCopyrightText: 2026 UnionTech Software Technology Co., Ltd.
+    SPDX-License-Identifier: MIT
+    ]]></copyright>
+    <interface name="treeland_personalization_manager_v2" version="2">
+        <description summary="personalization manager">
+            This interface allows a client to customize display effects.
+
+            Warning! The protocol described in this file is currently in the testing
+            phase. Backward compatible changes may be added together with the
+            corresponding interface version bump. Backward incompatible changes can
+            only be done by creating a new major version of the extension.
+        </description>
+
+        <request name="destroy" type="destructor" since="2">
+            <description summary="destroy the personalization manager">
+                Destroy the treeland_personalization_manager_v2 object.
+
+                This does not affect any other objects created through this
+                interface.
+            </description>
+        </request>
+
+        <request name="get_window_context">
+            <description summary="create a window personalization context">
+                Create a window personalization context for the given surface.
+                The context allows the client to customize the window's
+                background blend mode, round corner radius, shadow, border
+                and titlebar.
+
+                If the wl_surface is destroyed, the
+                treeland_personalization_window_context_v2 object becomes
+                inert and should be destroyed.
+            </description>
+            <arg name="id" type="new_id" interface="treeland_personalization_window_context_v2" />
+            <arg name="surface" type="object" interface="wl_surface" />
+        </request>
+
+        <request name="get_cursor_context">
+            <description summary="create a cursor personalization context">
+                Create a cursor personalization context for the client.
+                The context allows the client to set the cursor theme, size
+                and double-click interval.
+            </description>
+            <arg name="id" type="new_id" interface="treeland_personalization_cursor_context_v2" />
+        </request>
+
+        <request name="get_font_context">
+            <description summary="create a font personalization context">
+                Create a font personalization context for the client.
+                The context allows the client to set the system font,
+                monospace font and font size.
+            </description>
+            <arg name="id" type="new_id" interface="treeland_personalization_font_context_v2" />
+        </request>
+
+        <request name="get_appearance_context">
+            <description summary="create an appearance personalization context">
+                Create an appearance personalization context for the client.
+                The context allows the client to set the round corner radius,
+                icon theme, active color, window opacity, window theme type
+                and titlebar height.
+            </description>
+            <arg name="id" type="new_id" interface="treeland_personalization_appearance_context_v2" />
+        </request>
+    </interface>
+
+    <interface name="treeland_personalization_cursor_context_v2" version="1">
+        <description summary="cursor personalization context">
+            This interface allows a client to personalize the cursor.
+
+            Configuration changes are double-buffered. The client should
+            call apply to apply all pending changes at once.
+
+            Warning! The protocol described in this file is currently in the testing
+            phase. Backward compatible changes may be added together with the
+            corresponding interface version bump. Backward incompatible changes can
+            only be done by creating a new major version of the extension.
+        </description>
+
+        <request name="destroy" type="destructor">
+            <description summary="destroy the cursor context">
+                Destroy the cursor personalization context. No further
+                events will be sent from the compositor.
+            </description>
+        </request>
+
+        <request name="set_theme">
+            <description summary="set the cursor theme">
+                Set the cursor theme name. The change is pending until
+                apply is called.
+            </description>
+            <arg name="name" type="string" summary="cursor theme name" />
+        </request>
+
+        <request name="set_size">
+            <description summary="set the cursor size">
+                Set the cursor size in pixels. The change is pending until
+                apply is called.
+            </description>
+            <arg name="size" type="uint" summary="cursor size in pixels" />
+        </request>
+
+        <request name="set_double_click_interval">
+            <description summary="set the double-click interval">
+                Set the double-click interval, in milliseconds. The change
+                is pending until apply is called.
+            </description>
+            <arg name="interval" type="uint"
+                 summary="desired double-click interval in milliseconds"/>
+        </request>
+
+        <request name="apply">
+            <description summary="apply pending cursor configuration changes">
+                Apply all pending cursor configuration changes carried by
+                this object.
+
+                The compositor will reply with a done event on success, or
+                a failed event if one or more changes could not be applied.
+            </description>
+        </request>
+
+        <event name="theme">
+            <description summary="notify of cursor theme change">
+                Notification of a new cursor theme. This event is sent
+                after the cursor theme has been changed, either by this
+                client or by another client.
+            </description>
+            <arg name="name" type="string" summary="cursor theme name" />
+        </event>
+        <event name="size">
+            <description summary="notify of cursor size change">
+                Notification of a new cursor size. This event is sent
+                after the cursor size has been changed, either by this
+                client or by another client.
+            </description>
+            <arg name="size" type="uint" summary="cursor size in pixels" />
+        </event>
+
+        <event name="double_click_interval">
+            <description summary="notify of double-click interval change">
+                Notification of the current double-click interval, in
+                milliseconds.
+            </description>
+            <arg name="interval" type="uint"
+                 summary="current double-click interval in milliseconds"/>
+        </event>
+
+        <event name="failed">
+            <description summary="apply failed">
+                This event indicates that the compositor failed to apply one or
+                more pending cursor configuration changes carried by
+                this object.
+
+                This event does not destroy the object. The client may continue
+                using the object and send further requests.
+            </description>
+        </event>
+
+        <event name="done">
+            <description summary="end of a cursor state batch">
+                This event is sent once when all cursor configuration
+                state events in the current batch have been sent.
+
+                The compositor must always end a batch of cursor
+                configuration state events with this event, regardless of
+                whether it sends the initial state or a later update.
+            </description>
+        </event>
+    </interface>
+
+    <interface name="treeland_personalization_window_context_v2" version="1">
+        <description summary="window personalization context">
+            This interface allows a client to personalize the window
+            associated with the given wl_surface.
+
+            Warning! The protocol described in this file is currently in the testing
+            phase. Backward compatible changes may be added together with the
+            corresponding interface version bump. Backward incompatible changes can
+            only be done by creating a new major version of the extension.
+        </description>
+
+        <enum name="blend_mode">
+            <description summary="window blend mode">
+                Window blend mode defines how the compositor composites
+                the window's surface over other surfaces.
+            </description>
+            <entry name="transparent" value="0"
+                summary="composite over background with alpha channel" />
+            <entry name="wallpaper" value="1" summary="composite window over wallpaper" />
+            <entry name="blur" value="2" summary="blur the content behind the window" />
+        </enum>
+
+        <enum name="enable_mode">
+            <description summary="titlebar enable mode">
+                Describes whether the system titlebar should be enabled or
+                disabled.
+            </description>
+            <entry name="enable" value="0" summary="force enable the system titlebar" />
+            <entry name="disable" value="1" summary="force disable the system titlebar" />
+        </enum>
+
+        <request name="destroy" type="destructor">
+            <description summary="destroy the window context">
+                Destroy the window personalization context. The compositor
+                will revert to its default window styling.
+            </description>
+        </request>
+
+        <request name="set_blend_mode">
+            <description summary="set the window background blend mode">
+                Set the window background blend mode. This determines how
+                the compositor composites the window's surface over other
+                surfaces.
+            </description>
+            <arg name="mode" type="int" enum="blend_mode" />
+        </request>
+
+        <request name="set_round_corner_radius">
+            <description summary="set the window round corner radius">
+                Set the window round corner radius in pixels. Invoking this
+                request indicates that the client wants to manage the window
+                round corner radius by itself. If this request is not
+                invoked, the round corner radius will be decided by the
+                compositor.
+            </description>
+            <arg name="radius" type="int" summary="round corner radius in pixels" />
+        </request>
+
+        <request name="set_shadow">
+            <description summary="set the window shadow">
+                Set the window shadow properties including radius, offset
+                and color. Invoking this request indicates that the client
+                wants to manage the window shadow by itself. If this request
+                is not invoked, the shadow will be decided by the compositor.
+            </description>
+            <arg name="radius" type="int" summary="shadow blur radius" />
+            <arg name="offset_x" type="int" summary="shadow horizontal offset" />
+            <arg name="offset_y" type="int" summary="shadow vertical offset" />
+            <arg name="r" type="int" summary="shadow color red channel" />
+            <arg name="g" type="int" summary="shadow color green channel" />
+            <arg name="b" type="int" summary="shadow color blue channel" />
+            <arg name="a" type="int" summary="shadow color alpha channel" />
+        </request>
+
+        <request name="set_border">
+            <description summary="set the window border">
+                Set the window border width and color.
+            </description>
+            <arg name="width" type="int" summary="border width in pixels" />
+            <arg name="r" type="int" summary="border color red channel" />
+            <arg name="g" type="int" summary="border color green channel" />
+            <arg name="b" type="int" summary="border color blue channel" />
+            <arg name="a" type="int" summary="border color alpha channel" />
+        </request>
+
+        <request name="set_titlebar">
+            <description summary="set the system titlebar mode">
+                Set whether the system titlebar should be enabled or disabled
+                for this window.
+            </description>
+            <arg name="mode" type="int" enum="enable_mode" summary="titlebar enable mode" />
+        </request>
+    </interface>
+
+    <interface name="treeland_personalization_font_context_v2" version="1">
+        <description summary="font personalization context">
+            This interface allows a client to set the system font, monospace
+            font and font size.
+
+            Configuration changes are double-buffered. The client should
+            call apply to apply all pending changes at once.
+
+            Warning! The protocol described in this file is currently in the testing
+            phase. Backward compatible changes may be added together with the
+            corresponding interface version bump. Backward incompatible changes can
+            only be done by creating a new major version of the extension.
+        </description>
+
+        <request name="destroy" type="destructor">
+            <description summary="destroy the font context">
+                Destroy the font personalization context. No further
+                events will be sent from the compositor.
+            </description>
+        </request>
+
+        <request name="set_font_size">
+            <description summary="set the system font size">
+                Set the system font size. The change is pending until
+                apply is called.
+            </description>
+            <arg name="size" type="uint" summary="font size in points" />
+        </request>
+
+        <request name="set_font">
+            <description summary="set the system font">
+                Set the system font name. The change is pending until
+                apply is called.
+            </description>
+            <arg name="font_name" type="string" summary="font family name" />
+        </request>
+
+        <request name="set_monospace_font">
+            <description summary="set the system monospace font">
+                Set the system monospace font name. The change is pending
+                until apply is called.
+            </description>
+            <arg name="font_name" type="string" summary="monospace font family name" />
+        </request>
+
+        <request name="apply">
+            <description summary="apply pending font configuration changes">
+                Apply all pending font configuration changes carried by
+                this object.
+
+                The compositor will reply with a done event on success, or
+                a failed event if one or more changes could not be applied.
+            </description>
+        </request>
+
+        <event name="font">
+            <description summary="notify of system font change">
+                Notification of a new system font. This event is sent
+                after the system font has been changed, either by this
+                client or by another client.
+            </description>
+            <arg name="font_name" type="string" summary="font family name" />
+        </event>
+        <event name="monospace_font">
+            <description summary="notify of system monospace font change">
+                Notification of a new system monospace font. This event is
+                sent after the system monospace font has been changed,
+                either by this client or by another client.
+            </description>
+            <arg name="font_name" type="string" summary="monospace font family name" />
+        </event>
+        <event name="font_size">
+            <description summary="notify of system font size change">
+                Notification of a new system font size. This event is sent
+                after the system font size has been changed, either by this
+                client or by another client.
+            </description>
+            <arg name="font_size" type="uint" summary="font size in points" />
+        </event>
+
+        <event name="failed">
+            <description summary="apply failed">
+                This event indicates that the compositor failed to apply one or
+                more pending font configuration changes carried by
+                this object.
+
+                This event does not destroy the object. The client may continue
+                using the object and send further requests.
+            </description>
+        </event>
+
+        <event name="done">
+            <description summary="end of a font state batch">
+                This event is sent once when all font configuration
+                state events in the current batch have been sent.
+
+                The compositor must always end a batch of font
+                configuration state events with this event, regardless of
+                whether it sends the initial state or a later update.
+            </description>
+        </event>
+    </interface>
+
+    <interface name="treeland_personalization_appearance_context_v2" version="1">
+        <description summary="appearance personalization context">
+            This interface allows a client to set the system appearance
+            settings including round corner radius, icon theme, active
+            color, window opacity, window theme type and titlebar height.
+
+            Configuration changes are double-buffered. The client should
+            call apply to apply all pending changes at once.
+
+            Warning! The protocol described in this file is currently in the testing
+            phase. Backward compatible changes may be added together with the
+            corresponding interface version bump. Backward incompatible changes can
+            only be done by creating a new major version of the extension.
+        </description>
+        <enum name="theme_type">
+            <description summary="window theme type">
+                Describes the available window theme types.
+            </description>
+            <entry name="auto" value="1" summary="follow the system theme" />
+            <entry name="light" value="2" summary="force light theme" />
+            <entry name="dark" value="4" summary="force dark theme" />
+        </enum>
+
+        <enum name="error">
+            <entry name="invalid_round_corner_radius" value="0" summary="the provided round corner radius is invalid" />
+            <entry name="invalid_icon_theme" value="1" summary="the provided icon theme is invalid" />
+            <entry name="invalid_active_color" value="2" summary="the provided active color is invalid" />
+            <entry name="invalid_window_opacity" value="4" summary="the provided window opacity is invalid" />
+            <entry name="invalid_window_theme_type" value="8" summary="the provided window theme type is invalid" />
+            <entry name="invalid_window_titlebar_height" value="16" summary="the provided window titlebar height is invalid" />
+        </enum>
+
+        <request name="destroy" type="destructor">
+            <description summary="destroy the appearance context">
+                Destroy the appearance personalization context. No further
+                events will be sent from the compositor.
+            </description>
+        </request>
+
+        <request name="set_round_corner_radius">
+            <description summary="set the window round corner radius">
+                Set the window round corner radius in pixels. The change
+                is pending until apply is called.
+            </description>
+            <arg name="radius" type="int" summary="round corner radius in pixels" />
+        </request>
+
+        <request name="set_icon_theme">
+            <description summary="set the system icon theme">
+                Set the system icon theme name. The change is pending until
+                apply is called.
+            </description>
+            <arg name="theme" type="string" summary="icon theme name" />
+        </request>
+
+        <request name="set_active_color">
+            <description summary="set the system active color">
+                Set the system active color in RGB format. The change is
+                pending until apply is called.
+            </description>
+            <arg name="color" type="string" summary="active color in RGB format" />
+        </request>
+
+        <request name="set_window_opacity">
+            <description summary="set the window opacity">
+                Set the window opacity. The change is pending until apply
+                is called.
+            </description>
+            <arg name="opacity" type="uint" summary="window opacity" />
+        </request>
+
+        <request name="set_window_theme_type">
+            <description summary="set the window theme type">
+                Set the window theme type. The change is pending until
+                apply is called.
+            </description>
+            <arg name="type" type="uint" enum="theme_type" summary="window theme type" />
+        </request>
+
+        <request name="set_window_titlebar_height">
+            <description summary="set the window titlebar height">
+                Set the window titlebar height in pixels. The change is
+                pending until apply is called.
+            </description>
+            <arg name="height" type="uint" summary="window titlebar height in pixels" />
+        </request>
+
+        <request name="apply">
+            <description summary="apply pending appearance configuration changes">
+                Apply all pending appearance configuration changes carried
+                by this object.
+
+                The compositor will reply with a done event on success, or
+                a failed event if one or more changes could not be applied.
+            </description>
+        </request>
+
+        <event name="round_corner_radius">
+            <description summary="notify of round corner radius change">
+                Notification of a new window round corner radius. This event
+                is sent after the round corner radius has been changed,
+                either by this client or by another client.
+            </description>
+            <arg name="radius" type="int" summary="round corner radius in pixels" />
+        </event>
+
+        <event name="icon_theme">
+            <description summary="notify of icon theme change">
+                Notification of a new system icon theme. This event is sent
+                after the icon theme has been changed, either by this client
+                or by another client.
+            </description>
+            <arg name="theme_name" type="string" summary="icon theme name" />
+        </event>
+
+        <event name="active_color">
+            <description summary="notify of active color change">
+                Notification of a new system active color. This event is
+                sent after the active color has been changed, either by
+                this client or by another client.
+            </description>
+            <arg name="active_color" type="string" summary="active color in RGB format" />
+        </event>
+
+        <event name="window_opacity">
+            <description summary="notify of window opacity change">
+                Notification of a new window opacity. This event is sent
+                after the window opacity has been changed, either by this
+                client or by another client.
+            </description>
+            <arg name="opacity" type="uint" summary="window opacity" />
+        </event>
+
+        <event name="window_theme_type">
+            <description summary="notify of window theme type change">
+                Notification of a new window theme type. This event is sent
+                after the window theme type has been changed, either by
+                this client or by another client.
+            </description>
+            <arg name="type" type="uint" enum="theme_type" summary="window theme type" />
+        </event>
+
+        <event name="window_titlebar_height">
+            <description summary="notify of window titlebar height change">
+                Notification of a new window titlebar height. This event
+                is sent after the window titlebar height has been changed,
+                either by this client or by another client.
+            </description>
+            <arg name="height" type="uint" summary="window titlebar height in pixels" />
+        </event>
+
+        <event name="failed">
+            <description summary="apply failed">
+                This event indicates that the compositor failed to apply one or
+                more pending appearance configuration changes carried by
+                this object.
+
+                This event does not destroy the object. The client may continue
+                using the object and send further requests.
+            </description>
+        </event>
+
+        <event name="done">
+            <description summary="end of an appearance state batch">
+                This event is sent once when all appearance configuration
+                state events in the current batch have been sent.
+
+                The compositor must always end a batch of appearance
+                configuration state events with this event, regardless of
+                whether it sends the initial state or a later update.
+            </description>
+        </event>
+    </interface>
+</protocol>

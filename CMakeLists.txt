@@ -30,6 +30,7 @@ set(XML
   xml/treeland-wallpaper-shell-unstable-v1.xml
   xml/treeland-wine-window-management-unstable-v1.xml
   xml/treeland-wine-window-state-unstable-v1.xml
+  xml/treeland-personalization-manager-v2.xml
 )
 
 install(FILES ${XML} DESTINATION ${CMAKE_INSTALL_DATADIR}/treeland-protocols)
